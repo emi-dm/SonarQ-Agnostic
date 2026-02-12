@@ -34,7 +34,7 @@ Web-based visualizer for SonarQube or SonarCloud quality reports. Connect to you
 2. **Install dependencies**
 
    ```bash
-   uv sync
+   uv sync --extra dev
    ```
 
 3. **Configure environment**

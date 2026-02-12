@@ -52,7 +52,7 @@ Desde la raíz del repo:
 
 ```bash
 cd backend
-uv sync
+uv sync --extra dev
 ```
 
 ### 2) Configurar entorno
