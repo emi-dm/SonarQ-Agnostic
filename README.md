@@ -89,6 +89,13 @@ Con cobertura:
 uv run pytest backend/tests/ --cov=backend/src --cov-report=term-missing --tb=short -q
 ```
 
+Para generar el reporte XML que consume SonarCloud:
+
+```bash
+cd backend
+uv run pytest tests/ --cov=src --cov-report=xml:coverage.xml --cov-report=term-missing --tb=short -q
+```
+
 Lint (desde `backend/`):
 
 ```bash
@@ -108,6 +115,25 @@ uv run ruff format .
 - `POST /api/projects/{id}/refresh`
 - `GET /api/projects/{id}/issues`
 - `GET /api/projects/{id}/trends`
+
+---
+
+## ☁️ SonarCloud + cobertura Python
+
+Este repo está configurado para importar cobertura de Python desde:
+
+- `backend/coverage.xml`
+
+Parámetro usado en `sonar-project.properties`:
+
+- `sonar.python.coverage.reportPaths=backend/coverage.xml`
+
+Importante (según SonarCloud):
+
+- usar **CI-based analysis** (no automatic analysis) para cobertura Python.
+- la cobertura debe generarse **antes** del paso de scan.
+
+El workflow `.github/workflows/build.yml` ya ejecuta tests con `pytest-cov`, genera `backend/coverage.xml` y después ejecuta el scan de SonarQube Cloud.
 
 Contrato OpenAPI:
 
