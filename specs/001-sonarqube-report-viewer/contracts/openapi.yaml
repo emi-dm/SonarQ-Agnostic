@@ -1,0 +1,672 @@
+openapi: 3.0.3
+info:
+  title: SonarQube Visualizer API
+  description: |
+    REST API for SonarQube Visualizer - a tool to fetch, store, and visualize
+    SonarQube quality reports locally.
+  version: 1.0.0
+  contact:
+    name: SonarQ-Agnostic Project
+
+servers:
+  - url: http://localhost:8000
+    description: Local development server
+
+tags:
+  - name: connections
+    description: SonarQube connection management
+  - name: projects
+    description: Project listing and metrics
+  - name: issues
+    description: Issue search and details
+  - name: trends
+    description: Historical trends and analysis
+  - name: health
+    description: System health and status
+
+paths:
+  /api/health:
+    get:
+      summary: Health check
+      tags:
+        - health
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [healthy]
+                  timestamp:
+                    type: string
+                    format: date-time
+
+  # ==================== CONNECTIONS ====================
+  /api/connections:
+    get:
+      summary: List all SonarQube connections
+      tags:
+        - connections
+      responses:
+        '200':
+          description: List of connections
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Connection'
+    post:
+      summary: Create a new SonarQube connection
+      tags:
+        - connections
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConnectionCreate'
+      responses:
+        '201':
+          description: Connection created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Connection'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+
+  /api/connections/{connection_id}:
+    get:
+      summary: Get a specific connection
+      tags:
+        - connections
+      parameters:
+        - name: connection_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Connection details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Connection'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      summary: Update a connection
+      tags:
+        - connections
+      parameters:
+        - name: connection_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConnectionUpdate'
+      responses:
+        '200':
+          description: Connection updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Connection'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      summary: Delete a connection
+      tags:
+        - connections
+      parameters:
+        - name: connection_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Connection deleted
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/connections/{connection_id}/test:
+    post:
+      summary: Test connection to SonarQube
+      tags:
+        - connections
+      parameters:
+        - name: connection_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Connection test result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  version:
+                    type: string
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '503':
+          description: Cannot connect to SonarQube server
+
+  # ==================== PROJECTS ====================
+  /api/connections/{connection_id}/projects:
+    get:
+      summary: List projects from SonarQube
+      tags:
+        - projects
+      parameters:
+        - name: connection_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: q
+          in: query
+          schema:
+            type: string
+          description: Search query for project name/key
+      responses:
+        '200':
+          description: List of projects
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Project'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    post:
+      summary: Sync projects from SonarQube to local DB
+      tags:
+        - projects
+      parameters:
+        - name: connection_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Projects synced
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  synced_count:
+                    type: integer
+                  message:
+                    type: string
+
+  /api/projects:
+    get:
+      summary: List all cached projects
+      tags:
+        - projects
+      parameters:
+        - name: connection_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of cached projects
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Project'
+
+  /api/projects/{project_id}:
+    get:
+      summary: Get project details with current metrics
+      tags:
+        - projects
+      parameters:
+        - name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Project details with metrics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectDetails'
+
+  /api/projects/{project_id}/refresh:
+    post:
+      summary: Refresh project metrics from SonarQube
+      tags:
+        - projects
+      parameters:
+        - name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Metrics refreshed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Metrics'
+
+  # ==================== ISSUES ====================
+  /api/projects/{project_id}/issues:
+    get:
+      summary: Search issues for a project
+      tags:
+        - issues
+      parameters:
+        - name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [BUG, VULNERABILITY, CODE_SMELL]
+        - name: severity
+          in: query
+          schema:
+            type: string
+            enum: [INFO, MINOR, MAJOR, CRITICAL, BLOCKER]
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [OPEN, CONFIRMED, REOPENED, RESOLVED, CLOSED]
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: page_size
+          in: query
+          schema:
+            type: integer
+            default: 50
+            maximum: 500
+      responses:
+        '200':
+          description: List of issues
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  issues:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Issue'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+
+  /api/issues/{issue_id}:
+    get:
+      summary: Get issue details
+      tags:
+        - issues
+      parameters:
+        - name: issue_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Issue details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Issue'
+
+  # ==================== TRENDS ====================
+  /api/projects/{project_id}/trends:
+    get:
+      summary: Get historical trends for a project
+      tags:
+        - trends
+      parameters:
+        - name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: metrics
+          in: query
+          schema:
+            type: string
+          description: Comma-separated list of metrics (default: bugs,vulnerabilities,code_smells,coverage)
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date
+          description: Start date (ISO format)
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date
+          description: End date (ISO format)
+      responses:
+        '200':
+          description: Historical trend data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  project_id:
+                    type: string
+                    format: uuid
+                  metrics:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TrendMetric'
+
+components:
+  schemas:
+    # ==================== SCHEMAS ====================
+    Connection:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        url:
+          type: string
+          format: uri
+        is_default:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+      required:
+        - id
+        - name
+        - url
+        - created_at
+        - updated_at
+
+    ConnectionCreate:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        url:
+          type: string
+          format: uri
+        token:
+          type: string
+          minLength: 1
+        is_default:
+          type: boolean
+          default: false
+      required:
+        - name
+        - url
+        - token
+
+    ConnectionUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        url:
+          type: string
+          format: uri
+        token:
+          type: string
+          minLength: 1
+        is_default:
+          type: boolean
+
+    Project:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        connection_id:
+          type: string
+          format: uuid
+        sonar_key:
+          type: string
+        name:
+          type: string
+        visibility:
+          type: string
+          enum: [public, private]
+        last_analysis_date:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+        - id
+        - sonar_key
+        - name
+
+    ProjectDetails:
+      type: object
+      properties:
+        project:
+          $ref: '#/components/schemas/Project'
+        metrics:
+          $ref: '#/components/schemas/Metrics'
+        staleness:
+          type: object
+          properties:
+            is_stale:
+              type: boolean
+            last_updated:
+              type: string
+              format: date-time
+            hours_since_update:
+              type: integer
+
+    Metrics:
+      type: object
+      properties:
+        project_id:
+          type: string
+          format: uuid
+        bugs:
+          type: integer
+          nullable: true
+        vulnerabilities:
+          type: integer
+          nullable: true
+        code_smells:
+          type: integer
+          nullable: true
+        coverage:
+          type: number
+          nullable: true
+        ncloc:
+          type: integer
+          nullable: true
+        duplicated_lines_density:
+          type: number
+          nullable: true
+        alert_status:
+          type: string
+          enum: [OK, WARN, ERROR]
+          nullable: true
+        sqale_index:
+          type: integer
+          nullable: true
+        snapshot_date:
+          type: string
+          format: date-time
+
+    Issue:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        project_id:
+          type: string
+          format: uuid
+        sonar_key:
+          type: string
+        type:
+          type: string
+          enum: [BUG, VULNERABILITY, CODE_SMELL]
+        severity:
+          type: string
+          enum: [INFO, MINOR, MAJOR, CRITICAL, BLOCKER]
+        status:
+          type: string
+          enum: [OPEN, CONFIRMED, REOPENED, RESOLVED, CLOSED]
+        message:
+          type: string
+          nullable: true
+        rule:
+          type: string
+          nullable: true
+        component:
+          type: string
+          nullable: true
+        line:
+          type: integer
+          nullable: true
+        effort:
+          type: integer
+          nullable: true
+      required:
+        - id
+        - sonar_key
+        - type
+        - severity
+        - status
+
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+        page_size:
+          type: integer
+        total:
+          type: integer
+        total_pages:
+          type: integer
+
+    TrendMetric:
+      type: object
+      properties:
+        metric:
+          type: string
+        data_points:
+          type: array
+          items:
+            type: object
+            properties:
+              date:
+                type: string
+                format: date
+              value:
+                type: number
+
+  # ==================== RESPONSES ====================
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              detail:
+                type: string
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              detail:
+                type: string
+
+    ValidationError:
+      description: Validation error
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              detail:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    field:
+                      type: string
+                    message:
+                      type: string

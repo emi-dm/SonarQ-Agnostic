@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="SonarQube Visualizer - View and analyze SonarQube quality reports">
+    <title>SonarQube Visualizer</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="/css/dashboard.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="app" role="application" aria-label="SonarQube Visualizer">
+        <!-- Sidebar -->
+        <aside class="sidebar" role="navigation" aria-label="Main navigation">
+            <div class="sidebar-header">
+                <h1>SonarQube</h1>
+                <span class="subtitle">Visualizer</span>
+            </div>
+            
+            <nav class="sidebar-nav" role="navigation" aria-label="Views">
+                <a href="#" class="nav-item active" data-view="dashboard" role="menuitem" tabindex="0" aria-current="page">
+                    <span class="icon" aria-hidden="true">📊</span>
+                    Dashboard
+                </a>
+                <a href="#" class="nav-item" data-view="connections" role="menuitem" tabindex="0">
+                    <span class="icon" aria-hidden="true">🔗</span>
+                    Connections
+                </a>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <button id="add-connection-btn" class="btn btn-primary btn-sm" aria-label="Add new SonarQube connection">
+                    + Add Connection
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content" role="main" aria-label="Main content">
+            <!-- Dashboard View -->
+            <section id="dashboard-view" class="view active" role="region" aria-labelledby="dashboard-heading">
+                <header class="view-header">
+                    <h2 id="dashboard-heading">Dashboard</h2>
+                    <div class="header-actions">
+                        <label for="connection-select" class="visually-hidden">Select SonarQube connection</label>
+                        <select id="connection-select" class="select" aria-label="Select SonarQube connection">
+                            <option value="">Select Connection</option>
+                        </select>
+                        <button id="sync-projects-btn" class="btn btn-secondary" aria-label="Sync projects from SonarQube">
+                            Sync Projects
+                        </button>
+                    </div>
+                </header>
+                
+                <div id="projects-grid" class="projects-grid" role="region" aria-label="Projects list" aria-live="polite">
+                    <!-- Projects will be rendered here -->
+                </div>
+                
+                <div id="project-detail" class="project-detail hidden" role="region" aria-labelledby="project-detail-heading" aria-live="polite">
+                    <!-- Project detail will be rendered here -->
+                </div>
+            </section>
+
+            <!-- Connections View -->
+            <section id="connections-view" class="view" role="region" aria-labelledby="connections-heading">
+                <header class="view-header">
+                    <h2 id="connections-heading">Connections</h2>
+                </header>
+                
+                <div id="connections-list" class="connections-list" role="list" aria-label="SonarQube connections">
+                    <!-- Connections will be rendered here -->
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Connection Modal -->
+    <div id="connection-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+        <div class="modal-backdrop" tabindex="-1"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-title">Add Connection</h3>
+                <button class="modal-close" aria-label="Close dialog">&times;</button>
+            </div>
+            <form id="connection-form" class="modal-body" aria-label="Connection form">
+                <input type="hidden" id="connection-id">
+                <div class="form-group">
+                    <label for="connection-name">Name</label>
+                    <input type="text" id="connection-name" name="name" required 
+                           placeholder="My SonarQube" aria-required="true">
+                </div>
+                <div class="form-group">
+                    <label for="connection-url">SonarQube URL</label>
+                    <input type="url" id="connection-url" name="url" required
+                           placeholder="https://sonarqube.example.com or https://sonarcloud.io" aria-required="true">
+                </div>
+                <div class="form-group">
+                    <label for="connection-organization">Organization (SonarCloud only)</label>
+                    <input type="text" id="connection-organization" name="organization"
+                           placeholder="your-org-name (leave empty for SonarQube)">
+                </div>
+                <div class="form-group">
+                    <label for="connection-token">API Token</label>
+                    <input type="password" id="connection-token" name="token" required
+                           placeholder="Your API token" aria-required="true">
+                </div>
+                <div class="form-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="connection-default" name="is_default">
+                        Set as default
+                    </label>
+                </div>
+                <div id="connection-test-result" class="alert hidden" role="status" aria-live="polite"></div>
+            </form>
+            <div class="modal-footer">
+                <button type="button" id="test-connection-btn" class="btn btn-secondary" aria-label="Test connection to SonarQube">
+                    Test Connection
+                </button>
+                <button type="submit" form="connection-form" class="btn btn-primary" aria-label="Save connection">
+                    Save
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay hidden" role="status" aria-live="assertive" aria-busy="true">
+        <div class="spinner" aria-hidden="true"></div>
+        <p>Loading...</p>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="toast-container" role="status" aria-live="polite" aria-atomic="true"></div>
+
+    <!-- Skip Link for Keyboard Navigation -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script type="module" src="/js/api.js"></script>
+    <script type="module" src="/js/app.js"></script>
+</body>
+</html>

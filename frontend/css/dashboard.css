@@ -1,0 +1,372 @@
+/* Dashboard-specific styles */
+
+.projects-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: var(--spacing-lg);
+}
+
+/* Project Card Enhancements */
+.project-card {
+    position: relative;
+    overflow: hidden;
+}
+
+.project-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #0366D6, #4488FF);
+}
+
+.project-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: var(--spacing-md);
+}
+
+.project-card-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--color-text);
+    margin-bottom: var(--spacing-xs);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.project-card-key {
+    font-size: 0.75rem;
+    color: var(--color-text-secondary);
+    font-family: 'SF Mono', Monaco, monospace;
+    background-color: var(--color-bg);
+    padding: 2px 6px;
+    border-radius: var(--radius-sm);
+}
+
+.project-card-meta {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+    font-size: 0.75rem;
+    color: var(--color-text-secondary);
+}
+
+/* Metrics Grid */
+.project-card-metrics {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--spacing-sm);
+}
+
+.metric {
+    padding: var(--spacing-sm);
+    border-radius: var(--radius-sm);
+    background-color: var(--color-bg);
+    text-align: center;
+}
+
+.metric-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.metric-label {
+    font-size: 0.625rem;
+    color: var(--color-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: var(--spacing-xs);
+}
+
+/* Severity Colors */
+.metric.severity-blocker .metric-value { color: var(--color-blocker); }
+.metric.severity-critical .metric-value { color: var(--color-critical); }
+.metric.severity-major .metric-value { color: var(--color-major); }
+.metric.severity-minor .metric-value { color: var(--color-minor); }
+.metric.severity-info .metric-value { color: var(--color-info); }
+
+/* Coverage */
+.metric.coverage-good .metric-value { color: var(--color-success); }
+.metric.coverage-low .metric-value { color: var(--color-warning); }
+.metric.coverage-critical .metric-value { color: var(--color-error); }
+
+/* Card Footer */
+.project-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: var(--spacing-md);
+    padding-top: var(--spacing-md);
+    border-top: 1px solid var(--color-border);
+}
+
+.staleness-indicator {
+    font-size: 0.75rem;
+}
+
+.staleness-indicator.fresh {
+    color: var(--color-success);
+}
+
+.staleness-indicator.stale {
+    color: var(--color-warning);
+}
+
+/* Detail View */
+.project-detail {
+    background-color: var(--color-surface);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    padding: var(--spacing-xl);
+}
+
+.project-detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: var(--spacing-xl);
+    padding-bottom: var(--spacing-lg);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.project-detail-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin-bottom: var(--spacing-xs);
+}
+
+.project-detail-key {
+    font-family: 'SF Mono', Monaco, monospace;
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+}
+
+.detail-actions {
+    display: flex;
+    gap: var(--spacing-sm);
+}
+
+/* Metrics Panel */
+.metrics-panel {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-xl);
+}
+
+.metric-card {
+    position: relative;
+    overflow: hidden;
+}
+
+.metric-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+}
+
+.metric-card.bugs::before { background-color: var(--color-blocker); }
+.metric-card.vulnerabilities::before { background-color: var(--color-critical); }
+.metric-card.code-smells::before { background-color: var(--color-major); }
+.metric-card.coverage::before { background-color: var(--color-success); }
+.metric-card.duplicated::before { background-color: var(--color-warning); }
+.metric-card.debt::before { background-color: var(--color-minor); }
+
+.metric-card-value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    line-height: 1;
+    margin-bottom: var(--spacing-xs);
+}
+
+.metric-card-label {
+    font-size: 0.75rem;
+    color: var(--color-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Trends Section */
+.trends-section {
+    margin-top: var(--spacing-xl);
+    padding-top: var(--spacing-lg);
+    border-top: 1px solid var(--color-border);
+}
+
+.trends-section h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: var(--spacing-md);
+}
+
+.trends-chart {
+    background-color: var(--color-bg);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+    height: 300px;
+}
+
+/* Issues List */
+.issues-section {
+    margin-top: var(--spacing-xl);
+    padding-top: var(--spacing-lg);
+    border-top: 1px solid var(--color-border);
+}
+
+.issues-section h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: var(--spacing-md);
+}
+
+.issues-filters {
+    display: flex;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+    flex-wrap: wrap;
+}
+
+.filter-group {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+}
+
+.filter-group label {
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+}
+
+.filter-group select {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    font-size: 0.875rem;
+}
+
+.issues-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.issue-item {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--spacing-md);
+    padding: var(--spacing-md);
+    background-color: var(--color-bg);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: background-color var(--transition-fast);
+}
+
+.issue-item:hover {
+    background-color: var(--color-border);
+}
+
+.issue-severity {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 6px;
+}
+
+.issue-severity.blocker { background-color: var(--color-blocker); }
+.issue-severity.critical { background-color: var(--color-critical); }
+.issue-severity.major { background-color: var(--color-major); }
+.issue-severity.minor { background-color: var(--color-minor); }
+.issue-severity.info { background-color: var(--color-info); }
+
+.issue-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.issue-message {
+    font-size: 0.875rem;
+    color: var(--color-text);
+    margin-bottom: var(--spacing-xs);
+    word-break: break-word;
+}
+
+.issue-meta {
+    display: flex;
+    gap: var(--spacing-md);
+    font-size: 0.75rem;
+    color: var(--color-text-secondary);
+}
+
+.issue-location {
+    font-family: 'SF Mono', Monaco, monospace;
+}
+
+/* Pagination */
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: var(--spacing-sm);
+    margin-top: var(--spacing-lg);
+}
+
+.pagination button {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border: 1px solid var(--color-border);
+    background-color: var(--color-surface);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 0.875rem;
+}
+
+.pagination button:hover:not(:disabled) {
+    background-color: var(--color-bg);
+}
+
+.pagination button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.pagination-info {
+    font-size: 0.875rem;
+    color: var(--color-text-secondary);
+}
+
+/* Loading Skeleton */
+.skeleton {
+    background: linear-gradient(90deg, var(--color-bg) 25%, var(--color-border) 50%, var(--color-bg) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: var(--radius-sm);
+}
+
+@keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+.skeleton-card {
+    height: 180px;
+}
+
+.skeleton-text {
+    height: 1rem;
+    margin-bottom: var(--spacing-sm);
+}
+
+.skeleton-text.short {
+    width: 60%;
+}
