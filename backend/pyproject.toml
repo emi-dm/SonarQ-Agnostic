@@ -49,6 +49,7 @@ addopts = "-v --strict-markers"
 
 [tool.coverage.run]
 source = ["src"]
+relative_files = true
 omit = ["tests/*"]
 
 [tool.coverage.report]

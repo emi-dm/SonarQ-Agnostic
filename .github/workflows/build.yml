@@ -30,7 +30,22 @@ jobs:
         working-directory: backend
         run: uv run pytest tests/ --cov=src --cov-report=xml:coverage.xml --cov-report=term-missing --tb=short -q
 
+      - name: Verify coverage report exists
+        run: |
+          test -f backend/coverage.xml
+          echo "Found backend/coverage.xml"
+          ls -lah backend/coverage.xml
+
+      - name: Show Sonar config (debug)
+        run: |
+          echo "--- sonar-project.properties ---"
+          sed -n '1,200p' sonar-project.properties
+
       - name: SonarQube Scan
-        uses: SonarSource/sonarqube-scan-action@v6
+        uses: SonarSource/sonarqube-scan-action@v7
+        with:
+          args: >
+            -Dsonar.verbose=true
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: https://sonarcloud.io
