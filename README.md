@@ -92,8 +92,7 @@ uv run pytest backend/tests/ --cov=backend/src --cov-report=term-missing --tb=sh
 Para generar el reporte XML que consume SonarCloud:
 
 ```bash
-cd backend
-uv run pytest tests/ --cov=src --cov-report=xml:coverage.xml --cov-report=term-missing --tb=short -q
+uv run pytest backend/tests/ --cov=backend/src --cov-report=xml:backend/coverage.xml --cov-report=term-missing --tb=short -q
 ```
 
 Lint (desde `backend/`):
