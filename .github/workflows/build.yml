@@ -27,7 +27,7 @@ jobs:
         run: uv sync --extra dev
 
       - name: Run tests with coverage (Cobertura XML)
-        run: uv run pytest backend/tests/ --cov=backend/src --cov-report=xml:backend/coverage.xml --cov-report=term-missing --tb=short -q
+        run: uv run --project backend pytest backend/tests/ --cov=backend/src --cov-report=xml:backend/coverage.xml --cov-report=term-missing --tb=short -q
 
       - name: Verify coverage report exists
         run: |
