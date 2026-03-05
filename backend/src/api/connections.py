@@ -23,7 +23,8 @@ class ConnectionCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=100)
     url: str = Field(..., min_length=1)
     token: str = Field(..., min_length=1)
-    organization: Optional[str] = Field(None, description="SonarCloud organization (required for sonarcloud.io)")
+    organization: Optional[str] = Field(
+        None, description="SonarCloud organization (required for sonarcloud.io)")
     is_default: bool = False
 
 
@@ -86,7 +87,7 @@ async def create_connection(
     # If this is set as default, unset other defaults
     if data.is_default:
         db.query(Connection).update({"is_default": False})
-    
+
     connection = Connection(
         name=data.name,
         url=data.url,
@@ -97,7 +98,7 @@ async def create_connection(
     db.add(connection)
     db.commit()
     db.refresh(connection)
-    
+
     logger.info(f"Created connection: {connection.id}")
     return connection_to_response(connection)
 
@@ -108,7 +109,8 @@ async def get_connection(
     db: Annotated[Session, Depends(get_db)]
 ) -> ConnectionResponse:
     """Get a specific connection."""
-    connection = db.query(Connection).filter(Connection.id == str(connection_id)).first()
+    connection = db.query(Connection).filter(
+        Connection.id == str(connection_id)).first()
     if not connection:
         raise HTTPException(status_code=404, detail="Connection not found")
     return connection_to_response(connection)
@@ -121,14 +123,16 @@ async def update_connection(
     db: Annotated[Session, Depends(get_db)]
 ) -> ConnectionResponse:
     """Update a connection."""
-    connection = db.query(Connection).filter(Connection.id == str(connection_id)).first()
+    connection = db.query(Connection).filter(
+        Connection.id == str(connection_id)).first()
     if not connection:
         raise HTTPException(status_code=404, detail="Connection not found")
-    
+
     # If setting as default, unset other defaults
     if data.is_default and not connection.is_default:
-        db.query(Connection).filter(Connection.id != str(connection_id)).update({"is_default": False})
-    
+        db.query(Connection).filter(Connection.id != str(
+            connection_id)).update({"is_default": False})
+
     # Update fields
     if data.name is not None:
         connection.name = data.name
@@ -140,10 +144,10 @@ async def update_connection(
         connection.organization = data.organization
     if data.is_default is not None:
         connection.is_default = data.is_default
-    
+
     db.commit()
     db.refresh(connection)
-    
+
     logger.info(f"Updated connection: {connection.id}")
     return connection_to_response(connection)
 
@@ -154,13 +158,14 @@ async def delete_connection(
     db: Annotated[Session, Depends(get_db)]
 ) -> None:
     """Delete a connection."""
-    connection = db.query(Connection).filter(Connection.id == str(connection_id)).first()
+    connection = db.query(Connection).filter(
+        Connection.id == str(connection_id)).first()
     if not connection:
         raise HTTPException(status_code=404, detail="Connection not found")
-    
+
     db.delete(connection)
     db.commit()
-    
+
     logger.info(f"Deleted connection: {connection_id}")
 
 
@@ -170,11 +175,13 @@ async def test_connection(
     db: Annotated[Session, Depends(get_db)]
 ) -> ConnectionTestResponse:
     """Test connection to SonarQube."""
-    connection = db.query(Connection).filter(Connection.id == str(connection_id)).first()
+    connection = db.query(Connection).filter(
+        Connection.id == str(connection_id)).first()
     if not connection:
         raise HTTPException(status_code=404, detail="Connection not found")
-    
-    client = SonarQubeClient(url=connection.url, token=connection.token, organization=connection.organization)
+
+    client = SonarQubeClient(
+        url=connection.url, token=connection.token, organization=connection.organization)
     try:
         success, message, version = await client.test_connection()
         return ConnectionTestResponse(

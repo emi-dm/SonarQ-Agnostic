@@ -75,9 +75,12 @@ def issue_to_response(issue: Issue) -> IssueResponse:
 async def list_issues(
     project_id: UUID,
     db: Annotated[Session, Depends(get_db)],
-    type: Optional[str] = Query(None, description="Issue type: BUG, VULNERABILITY, CODE_SMELL"),
-    severity: Optional[str] = Query(None, description="Issue severity: INFO, MINOR, MAJOR, CRITICAL, BLOCKER"),
-    status: Optional[str] = Query(None, description="Issue status: OPEN, CONFIRMED, REOPENED, RESOLVED, CLOSED"),
+    type: Optional[str] = Query(
+        None, description="Issue type: BUG, VULNERABILITY, CODE_SMELL"),
+    severity: Optional[str] = Query(
+        None, description="Issue severity: INFO, MINOR, MAJOR, CRITICAL, BLOCKER"),
+    status: Optional[str] = Query(
+        None, description="Issue status: OPEN, CONFIRMED, REOPENED, RESOLVED, CLOSED"),
     page: int = Query(1, ge=1, description="Page number"),
     page_size: int = Query(50, ge=1, le=500, description="Results per page")
 ) -> IssuesListResponse:
@@ -85,33 +88,36 @@ async def list_issues(
     project = db.query(Project).filter(Project.id == str(project_id)).first()
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
-    
+
     # Validate filters
     if type and type not in VALID_TYPES:
-        raise HTTPException(status_code=400, detail=f"Invalid type. Must be one of: {VALID_TYPES}")
+        raise HTTPException(
+            status_code=400, detail=f"Invalid type. Must be one of: {VALID_TYPES}")
     if severity and severity not in VALID_SEVERITIES:
-        raise HTTPException(status_code=400, detail=f"Invalid severity. Must be one of: {VALID_SEVERITIES}")
+        raise HTTPException(
+            status_code=400, detail=f"Invalid severity. Must be one of: {VALID_SEVERITIES}")
     if status and status not in VALID_STATUSES:
-        raise HTTPException(status_code=400, detail=f"Invalid status. Must be one of: {VALID_STATUSES}")
-    
+        raise HTTPException(
+            status_code=400, detail=f"Invalid status. Must be one of: {VALID_STATUSES}")
+
     # Build query
     query = db.query(Issue).filter(Issue.project_id == str(project_id))
-    
+
     if type:
         query = query.filter(Issue.type == type)
     if severity:
         query = query.filter(Issue.severity == severity)
     if status:
         query = query.filter(Issue.status == status)
-    
+
     # Get total count
     total = query.count()
     total_pages = (total + page_size - 1) // page_size
-    
+
     # Paginate
     offset = (page - 1) * page_size
     issues = query.offset(offset).limit(page_size).all()
-    
+
     return IssuesListResponse(
         issues=[issue_to_response(i) for i in issues],
         pagination=PaginationResponse(

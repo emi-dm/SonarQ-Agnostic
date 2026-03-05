@@ -45,28 +45,31 @@ async def get_trends(
         "bugs,vulnerabilities,code_smells,coverage",
         description="Comma-separated list of metrics"
     ),
-    from_date: Optional[datetime] = Query(None, description="Start date (ISO format)"),
-    to_date: Optional[datetime] = Query(None, description="End date (ISO format)")
+    from_date: Optional[datetime] = Query(
+        None, description="Start date (ISO format)"),
+    to_date: Optional[datetime] = Query(
+        None, description="End date (ISO format)")
 ) -> TrendsResponse:
     """Get historical trends for a project."""
     project = db.query(Project).filter(Project.id == str(project_id)).first()
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
-    
+
     # Parse metrics list
     metric_list = [m.strip() for m in metrics.split(",") if m.strip()]
     valid_metrics = {"bugs", "vulnerabilities", "code_smells", "coverage"}
-    
+
     for metric in metric_list:
         if metric not in valid_metrics:
             raise HTTPException(
                 status_code=400,
                 detail=f"Invalid metric: {metric}. Valid metrics: {valid_metrics}"
             )
-    
+
     metrics_service = MetricsService(db)
-    trends_data = metrics_service.get_trends(str(project_id), from_date, to_date)
-    
+    trends_data = metrics_service.get_trends(
+        str(project_id), from_date, to_date)
+
     # Build response
     result_metrics = []
     for metric in metric_list:
@@ -75,7 +78,7 @@ async def get_trends(
             metric=metric,
             data_points=[TrendDataPoint(**dp) for dp in data_points]
         ))
-    
+
     return TrendsResponse(
         project_id=str(project_id),
         metrics=result_metrics

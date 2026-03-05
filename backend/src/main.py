@@ -1,5 +1,6 @@
 """FastAPI application entry point."""
 
+import os
 import logging
 import sys
 from contextlib import asynccontextmanager
@@ -55,12 +56,15 @@ app.include_router(issues_router)
 app.include_router(trends_router)
 
 # Serve static files
-import os
-frontend_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "frontend")
-app.mount("/css", StaticFiles(directory=os.path.join(frontend_path, "css")), name="css")
+frontend_path = os.path.join(os.path.dirname(
+    os.path.dirname(os.path.dirname(__file__))), "frontend")
+app.mount(
+    "/css", StaticFiles(directory=os.path.join(frontend_path, "css")), name="css")
 app.mount("/js", StaticFiles(directory=os.path.join(frontend_path, "js")), name="js")
 
 # Root route - serve index.html
+
+
 @app.get("/")
 async def root():
     """Serve the main HTML page."""

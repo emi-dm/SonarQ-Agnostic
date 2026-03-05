@@ -69,7 +69,8 @@ def project_to_response(proj: Project) -> ProjectResponse:
         sonar_key=proj.sonar_key,
         name=proj.name,
         visibility=proj.visibility,
-        last_analysis_date=proj.last_analysis_date.isoformat() if proj.last_analysis_date else None,
+        last_analysis_date=proj.last_analysis_date.isoformat(
+        ) if proj.last_analysis_date else None,
     )
 
 
@@ -80,15 +81,17 @@ async def list_projects(
     q: Optional[str] = None,
 ) -> list[ProjectResponse]:
     """List projects from a SonarQube connection."""
-    connection = db.query(Connection).filter(Connection.id == str(connection_id)).first()
+    connection = db.query(Connection).filter(
+        Connection.id == str(connection_id)).first()
     if not connection:
         raise HTTPException(status_code=404, detail="Connection not found")
-    
-    query = db.query(Project).filter(Project.connection_id == str(connection_id))
-    
+
+    query = db.query(Project).filter(
+        Project.connection_id == str(connection_id))
+
     if q:
         query = query.filter(Project.name.ilike(f"%{q}%"))
-    
+
     projects = query.all()
     return [project_to_response(p) for p in projects]
 
@@ -99,10 +102,11 @@ async def sync_projects(
     db: Annotated[Session, Depends(get_db)]
 ) -> ProjectSyncResponse:
     """Sync projects from SonarQube to local database."""
-    connection = db.query(Connection).filter(Connection.id == str(connection_id)).first()
+    connection = db.query(Connection).filter(
+        Connection.id == str(connection_id)).first()
     if not connection:
         raise HTTPException(status_code=404, detail="Connection not found")
-    
+
     sync_service = SyncService(db)
     try:
         synced_count = await sync_service.sync_projects(str(connection_id))
@@ -123,13 +127,13 @@ async def list_all_projects(
 ) -> list[ProjectResponse]:
     """List all cached projects."""
     query = db.query(Project)
-    
+
     if connection_id:
         query = query.filter(Project.connection_id == str(connection_id))
-    
+
     if search:
         query = query.filter(Project.name.ilike(f"%{search}%"))
-    
+
     projects = query.all()
     return [project_to_response(p) for p in projects]
 
@@ -143,11 +147,11 @@ async def get_project(
     project = db.query(Project).filter(Project.id == str(project_id)).first()
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
-    
+
     metrics_service = MetricsService(db)
     metrics = metrics_service.get_current_metrics(str(project_id))
     is_stale, last_updated = metrics_service.is_stale(str(project_id))
-    
+
     metrics_dict = None
     if metrics:
         metrics_dict = {
@@ -162,13 +166,13 @@ async def get_project(
             "sqale_index": metrics.sqale_index,
             "snapshot_date": metrics.snapshot_date.isoformat(),
         }
-    
+
     staleness_dict = {
         "is_stale": is_stale,
         "last_updated": last_updated.isoformat() if last_updated else None,
         "hours_since_update": int((datetime.now(timezone.utc) - last_updated).total_seconds() / 3600) if last_updated else None,
     }
-    
+
     return ProjectWithMetrics(
         project=project_to_response(project),
         metrics=metrics_dict,
@@ -185,13 +189,14 @@ async def refresh_project_metrics(
     project = db.query(Project).filter(Project.id == str(project_id)).first()
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
-    
+
     sync_service = SyncService(db)
     try:
         snapshot = await sync_service.sync_metrics(str(project_id))
         if not snapshot:
-            raise HTTPException(status_code=500, detail="Failed to sync metrics")
-        
+            raise HTTPException(
+                status_code=500, detail="Failed to sync metrics")
+
         return MetricsResponse(
             project_id=snapshot.project_id,
             bugs=snapshot.bugs,
@@ -207,4 +212,3 @@ async def refresh_project_metrics(
     except Exception as e:
         logger.exception("Error refreshing metrics")
         raise HTTPException(status_code=500, detail=str(e))
-
