@@ -75,14 +75,14 @@ def issue_to_response(issue: Issue) -> IssueResponse:
 async def list_issues(
     project_id: UUID,
     db: Annotated[Session, Depends(get_db)],
-    type: Optional[str] = Query(
-        None, description="Issue type: BUG, VULNERABILITY, CODE_SMELL"),
-    severity: Optional[str] = Query(
-        None, description="Issue severity: INFO, MINOR, MAJOR, CRITICAL, BLOCKER"),
-    status: Optional[str] = Query(
-        None, description="Issue status: OPEN, CONFIRMED, REOPENED, RESOLVED, CLOSED"),
-    page: int = Query(1, ge=1, description="Page number"),
-    page_size: int = Query(50, ge=1, le=500, description="Results per page")
+    type: Optional[Annotated[str, Query(
+        description="Issue type: BUG, VULNERABILITY, CODE_SMELL")]] = None,
+    severity: Optional[Annotated[str, Query(
+        description="Issue severity: INFO, MINOR, MAJOR, CRITICAL, BLOCKER")]] = None,
+    status: Optional[Annotated[str, Query(
+        description="Issue status: OPEN, CONFIRMED, REOPENED, RESOLVED, CLOSED")]] = None,
+    page: Annotated[int, Query(ge=1, description="Page number")] = 1,
+    page_size: Annotated[int, Query(ge=1, le=500, description="Results per page")] = 50
 ) -> IssuesListResponse:
     """Search issues for a project."""
     project = db.query(Project).filter(Project.id == str(project_id)).first()

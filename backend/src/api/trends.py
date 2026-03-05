@@ -41,14 +41,13 @@ class TrendsResponse(BaseModel):
 async def get_trends(
     project_id: UUID,
     db: Annotated[Session, Depends(get_db)],
-    metrics: Optional[str] = Query(
-        "bugs,vulnerabilities,code_smells,coverage",
+    metrics: Optional[Annotated[str, Query(
         description="Comma-separated list of metrics"
-    ),
-    from_date: Optional[datetime] = Query(
-        None, description="Start date (ISO format)"),
-    to_date: Optional[datetime] = Query(
-        None, description="End date (ISO format)")
+    )]] = "bugs,vulnerabilities,code_smells,coverage",
+    from_date: Optional[Annotated[datetime, Query(
+        description="Start date (ISO format)")]] = None,
+    to_date: Optional[Annotated[datetime, Query(
+        description="End date (ISO format)")]] = None
 ) -> TrendsResponse:
     """Get historical trends for a project."""
     project = db.query(Project).filter(Project.id == str(project_id)).first()
