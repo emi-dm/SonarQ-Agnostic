@@ -1,7 +1,7 @@
 """Connection API endpoints."""
 
 import logging
-from typing import Optional
+from typing import Optional, Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -70,17 +70,17 @@ def connection_to_response(conn: Connection) -> ConnectionResponse:
     )
 
 
-@router.get("", response_model=list[ConnectionResponse])
-async def list_connections(db: Session = Depends(get_db)) -> list[ConnectionResponse]:
+@router.get("")
+async def list_connections(db: Annotated[Session, Depends(get_db)]) -> list[ConnectionResponse]:
     """List all SonarQube connections."""
     connections = db.query(Connection).all()
     return [connection_to_response(c) for c in connections]
 
 
-@router.post("", response_model=ConnectionResponse, status_code=status.HTTP_201_CREATED)
+@router.post("", status_code=status.HTTP_201_CREATED)
 async def create_connection(
     data: ConnectionCreate,
-    db: Session = Depends(get_db)
+    db: Annotated[Session, Depends(get_db)]
 ) -> ConnectionResponse:
     """Create a new SonarQube connection."""
     # If this is set as default, unset other defaults
@@ -102,10 +102,10 @@ async def create_connection(
     return connection_to_response(connection)
 
 
-@router.get("/{connection_id}", response_model=ConnectionResponse)
+@router.get("/{connection_id}")
 async def get_connection(
     connection_id: UUID,
-    db: Session = Depends(get_db)
+    db: Annotated[Session, Depends(get_db)]
 ) -> ConnectionResponse:
     """Get a specific connection."""
     connection = db.query(Connection).filter(Connection.id == str(connection_id)).first()
@@ -114,11 +114,11 @@ async def get_connection(
     return connection_to_response(connection)
 
 
-@router.put("/{connection_id}", response_model=ConnectionResponse)
+@router.put("/{connection_id}")
 async def update_connection(
     connection_id: UUID,
     data: ConnectionUpdate,
-    db: Session = Depends(get_db)
+    db: Annotated[Session, Depends(get_db)]
 ) -> ConnectionResponse:
     """Update a connection."""
     connection = db.query(Connection).filter(Connection.id == str(connection_id)).first()
@@ -151,7 +151,7 @@ async def update_connection(
 @router.delete("/{connection_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_connection(
     connection_id: UUID,
-    db: Session = Depends(get_db)
+    db: Annotated[Session, Depends(get_db)]
 ) -> None:
     """Delete a connection."""
     connection = db.query(Connection).filter(Connection.id == str(connection_id)).first()
@@ -164,10 +164,10 @@ async def delete_connection(
     logger.info(f"Deleted connection: {connection_id}")
 
 
-@router.post("/{connection_id}/test", response_model=ConnectionTestResponse)
+@router.post("/{connection_id}/test")
 async def test_connection(
     connection_id: UUID,
-    db: Session = Depends(get_db)
+    db: Annotated[Session, Depends(get_db)]
 ) -> ConnectionTestResponse:
     """Test connection to SonarQube."""
     connection = db.query(Connection).filter(Connection.id == str(connection_id)).first()

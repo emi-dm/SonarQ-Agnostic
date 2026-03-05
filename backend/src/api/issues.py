@@ -1,7 +1,7 @@
 """Issues API endpoints."""
 
 import logging
-from typing import Optional, List
+from typing import Optional, List, Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -71,15 +71,15 @@ def issue_to_response(issue: Issue) -> IssueResponse:
     )
 
 
-@router.get("/projects/{project_id}/issues", response_model=IssuesListResponse)
+@router.get("/projects/{project_id}/issues")
 async def list_issues(
     project_id: UUID,
+    db: Annotated[Session, Depends(get_db)],
     type: Optional[str] = Query(None, description="Issue type: BUG, VULNERABILITY, CODE_SMELL"),
     severity: Optional[str] = Query(None, description="Issue severity: INFO, MINOR, MAJOR, CRITICAL, BLOCKER"),
     status: Optional[str] = Query(None, description="Issue status: OPEN, CONFIRMED, REOPENED, RESOLVED, CLOSED"),
     page: int = Query(1, ge=1, description="Page number"),
-    page_size: int = Query(50, ge=1, le=500, description="Results per page"),
-    db: Session = Depends(get_db)
+    page_size: int = Query(50, ge=1, le=500, description="Results per page")
 ) -> IssuesListResponse:
     """Search issues for a project."""
     project = db.query(Project).filter(Project.id == str(project_id)).first()
@@ -123,10 +123,10 @@ async def list_issues(
     )
 
 
-@router.get("/issues/{issue_id}", response_model=IssueResponse)
+@router.get("/issues/{issue_id}")
 async def get_issue(
     issue_id: UUID,
-    db: Session = Depends(get_db)
+    db: Annotated[Session, Depends(get_db)]
 ) -> IssueResponse:
     """Get issue details."""
     issue = db.query(Issue).filter(Issue.id == str(issue_id)).first()

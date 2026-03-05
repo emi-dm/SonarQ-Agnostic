@@ -1,7 +1,7 @@
 """Project API endpoints."""
 
 import logging
-from typing import Optional
+from typing import Optional, Annotated
 from uuid import UUID
 
 from datetime import datetime, timezone
@@ -73,11 +73,11 @@ def project_to_response(proj: Project) -> ProjectResponse:
     )
 
 
-@router.get("/connections/{connection_id}/projects", response_model=list[ProjectResponse])
+@router.get("/connections/{connection_id}/projects")
 async def list_projects(
     connection_id: UUID,
+    db: Annotated[Session, Depends(get_db)],
     q: Optional[str] = None,
-    db: Session = Depends(get_db)
 ) -> list[ProjectResponse]:
     """List projects from a SonarQube connection."""
     connection = db.query(Connection).filter(Connection.id == str(connection_id)).first()
@@ -93,10 +93,10 @@ async def list_projects(
     return [project_to_response(p) for p in projects]
 
 
-@router.post("/connections/{connection_id}/projects", response_model=ProjectSyncResponse)
+@router.post("/connections/{connection_id}/projects")
 async def sync_projects(
     connection_id: UUID,
-    db: Session = Depends(get_db)
+    db: Annotated[Session, Depends(get_db)]
 ) -> ProjectSyncResponse:
     """Sync projects from SonarQube to local database."""
     connection = db.query(Connection).filter(Connection.id == str(connection_id)).first()
@@ -115,11 +115,11 @@ async def sync_projects(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/projects", response_model=list[ProjectResponse])
+@router.get("/projects")
 async def list_all_projects(
+    db: Annotated[Session, Depends(get_db)],
     connection_id: Optional[UUID] = None,
     search: Optional[str] = None,
-    db: Session = Depends(get_db)
 ) -> list[ProjectResponse]:
     """List all cached projects."""
     query = db.query(Project)
@@ -134,10 +134,10 @@ async def list_all_projects(
     return [project_to_response(p) for p in projects]
 
 
-@router.get("/projects/{project_id}", response_model=ProjectWithMetrics)
+@router.get("/projects/{project_id}")
 async def get_project(
     project_id: UUID,
-    db: Session = Depends(get_db)
+    db: Annotated[Session, Depends(get_db)]
 ) -> ProjectWithMetrics:
     """Get project details with current metrics."""
     project = db.query(Project).filter(Project.id == str(project_id)).first()
@@ -176,10 +176,10 @@ async def get_project(
     )
 
 
-@router.post("/projects/{project_id}/refresh", response_model=MetricsResponse)
+@router.post("/projects/{project_id}/refresh")
 async def refresh_project_metrics(
     project_id: UUID,
-    db: Session = Depends(get_db)
+    db: Annotated[Session, Depends(get_db)]
 ) -> MetricsResponse:
     """Refresh project metrics from SonarQube."""
     project = db.query(Project).filter(Project.id == str(project_id)).first()

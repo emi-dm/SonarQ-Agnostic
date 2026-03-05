@@ -2,7 +2,7 @@
 
 import logging
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional, List, Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -37,16 +37,16 @@ class TrendsResponse(BaseModel):
     metrics: List[TrendMetric]
 
 
-@router.get("/projects/{project_id}/trends", response_model=TrendsResponse)
+@router.get("/projects/{project_id}/trends")
 async def get_trends(
     project_id: UUID,
+    db: Annotated[Session, Depends(get_db)],
     metrics: Optional[str] = Query(
         "bugs,vulnerabilities,code_smells,coverage",
         description="Comma-separated list of metrics"
     ),
     from_date: Optional[datetime] = Query(None, description="Start date (ISO format)"),
-    to_date: Optional[datetime] = Query(None, description="End date (ISO format)"),
-    db: Session = Depends(get_db)
+    to_date: Optional[datetime] = Query(None, description="End date (ISO format)")
 ) -> TrendsResponse:
     """Get historical trends for a project."""
     project = db.query(Project).filter(Project.id == str(project_id)).first()

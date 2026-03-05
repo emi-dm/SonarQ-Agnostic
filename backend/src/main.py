@@ -74,7 +74,7 @@ class HealthResponse(BaseModel):
     timestamp: datetime
 
 
-@app.get("/api/health", response_model=HealthResponse)
+@app.get("/api/health")
 async def health_check() -> HealthResponse:
     """Health check endpoint."""
     return HealthResponse(
