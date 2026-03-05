@@ -82,7 +82,8 @@ async def list_issues(
     status: Optional[Annotated[str, Query(
         description="Issue status: OPEN, CONFIRMED, REOPENED, RESOLVED, CLOSED")]] = None,
     page: Annotated[int, Query(ge=1, description="Page number")] = 1,
-    page_size: Annotated[int, Query(ge=1, le=500, description="Results per page")] = 50
+    page_size: Annotated[int, Query(
+        ge=1, le=500, description="Results per page")] = 50
 ) -> IssuesListResponse:
     """Search issues for a project."""
     project = db.query(Project).filter(Project.id == str(project_id)).first()
